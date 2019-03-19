@@ -11,8 +11,7 @@ class RedisSource(SourceBase):
     def __init__(self, boot_conf):
         """初始化构造函数"""
         super(RedisSource, self).__init__(boot_conf)
-        redis_conf = get_conf('base', 'REDIS').get(self.boot_conf.get('source_conf'))
-        self.RedisStore = RedisStore(redis_conf)
+        self.RedisStore = RedisStore(self.boot_conf.get('source_conf'))
 
     def get_handler(self):
         """获取链接"""
