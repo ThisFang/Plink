@@ -25,13 +25,8 @@ wheels/
 *.egg
 MANIFEST
 
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
+# PyCharm IDE
+.idea
 
 # Environments
 .env
@@ -41,3 +36,4 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
