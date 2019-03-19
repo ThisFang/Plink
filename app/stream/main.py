@@ -39,23 +39,21 @@ class Generator(SourceFunction, SuperBase):
         # 还原上次挂起
         data_source = self.__data_source
         data_source.get_handler()
-        restore_ok = data_source.restore_hung_up(ctx)
-        if restore_ok:
-            logger().info('Restore source from \'{}\' OK'.format(restore_ok))
+        # restore_ok = data_source.restore_hung_up(ctx)
+        # if restore_ok:
+        #     pass
+        #     logger().info('Restore source from \'{}\' OK'.format(restore_ok))
 
         # 自动数秒
         wait_seconds = get_conf('base', 'BASE').get('source_wait_second', 10)
-        while self._running:
-            position = data_source.mount(ctx)
-            if position:
-                data_source.set_position(position)
-                break
-            else:
-                time.sleep(wait_seconds)
-
         try:
-            pass
-
+            while self._running:
+                position = data_source.mount(ctx)
+                if position:
+                    data_source.set_position(position)
+                    # break
+                else:
+                    time.sleep(wait_seconds)
         except Exception as err:
             logger().error('Generator raise error: {}, job exited'.format(err))
         finally:

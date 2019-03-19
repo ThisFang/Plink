@@ -2,6 +2,9 @@
 import requests
 from conf import get_conf
 import json
+from app.utils import logger
+
+log_prefix = 'curl'
 
 
 class RequestBase(object):
@@ -13,13 +16,13 @@ class RequestBase(object):
 
         self._http_method = http_method
         self._url = url
-        self.kwargs = kwargs
+        self._kwargs = kwargs
 
     def get_response(self):
         res = requests.request(
             self._http_method,
             self._url,
-            **self.kwargs
+            **self._kwargs
         )
         self.res = res
         return res
@@ -98,13 +101,12 @@ class CurlToGateway(RequestBase):
 
     def fail(self):
         """失败回调"""
-        # self.logger.notice('[GATEWAY_CURL] [FAIL] {} {} {}'.format(self._url, self._data, self._res))
-        print('ERROR')
+        logger(log_prefix).notice('[GATEWAY_CURL] [FAIL] {} {} {}'.format(self._url, self._kwargs, self.res))
         return self.res
 
     def success(self):
         """成功回调"""
-        print('SUCCESS')
+        # logger(log_prefix).notice('[GATEWAY_CURL] [SUCCESS] {} {} {}'.format(self._url, self._kwargs, self.res))
         return self.res
 
 
@@ -112,6 +114,7 @@ class CurlToAnalysis(RequestBase):
     def __init__(self, sys, uri='', method='POST', **kwargs):
         self.res = None
         self.url = self.__combine_url(sys, uri)
+        self.kwargs = kwargs
         super(CurlToAnalysis, self).__init__(method, self.url, **kwargs)
 
     @staticmethod
@@ -133,14 +136,12 @@ class CurlToAnalysis(RequestBase):
 
     def fail(self):
         """失败回调"""
-        # self.logger.notice('[CURL] [FAIL] {} {} {}'.format(self._url, self._data, self.res))
-        print('ERROR')
+        logger(log_prefix).notice('[CURL] [FAIL] {} {} {}'.format(self._url, self._kwargs, self.res))
         self.reset_retry()
         return self.res
 
     def success(self):
         """成功回调"""
-        # self.logger.notice('[CURL] [SUCCESS] {} {} {}'.format(self._url, self._data, self.res))
-        print('SUCCESS')
+        logger(log_prefix).notice('[CURL] [SUCCESS] {} {} {}'.format(self._url, self._kwargs, self.res))
         self.reset_retry()
         return self.res
