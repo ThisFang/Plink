@@ -4,11 +4,11 @@
 BOOT = [
     {
         'name': 'mplus-traffic-for-app-mq',
-        'module': 'mplus.test_operator',
+        'module': 'test.test_operator',
         'source_driver': 'cache.redis_source',
         'source_conf': 'base',
         'source_topic': 'buffer->topic{test}mq_keys',
-        'sink_driver': 'mplus.test_sink',
+        'sink_driver': 'test.test_sink',
         'sink_conf': 'base',
         'parallelism': 1
     },
