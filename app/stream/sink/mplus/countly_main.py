@@ -29,7 +29,14 @@ class CountlyApply(WindowFunction):
     def apply(self, key, window, values, collector):
         data_list = []
         for uri, topic, ip, value in values:
-            data_list = data_list + json.loads(value)
+            value = json.loads(value)
+            # 补充ip
+            try:
+                for key in range(len(value)):
+                    value[key]['ip'] = ip
+            except Exception:
+                pass
+            data_list = data_list + value
 
         uri, topic, _, _ = values[0]
         uri = '/{}'.format(uri)
