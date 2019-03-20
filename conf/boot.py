@@ -2,16 +2,16 @@
 
 
 BOOT = [
-    {
-        'name': 'mplus-traffic-for-app-mq',
-        'module': 'mplus.normal_main',
-        'source_driver': 'cache.redis_source',
-        'source_conf': 'base',
-        'source_topic': 'buffer->topic{test}mq_keys',
-        'sink_driver': 'mplus.main',
-        'sink_conf': 'base',
-        'parallelism': 1
-    },
+    # {
+    #     'name': 'mplus-traffic-for-app-mq',
+    #     'module': 'mplus.normal_main',
+    #     'source_driver': 'cache.redis_source',
+    #     'source_conf': 'base',
+    #     'source_topic': 'buffer->topic{test}mq_keys',
+    #     'sink_driver': 'mplus.main',
+    #     'sink_conf': 'base',
+    #     'parallelism': 1
+    # },
     # {
     #     'name': 'mplus-countly-to-gateway-mq',
     #     'module': 'mplus.countly_to_gateway',
@@ -22,6 +22,16 @@ BOOT = [
     #     'sink_conf': 'base',
     #     'parallelism': 1
     # },
+    {
+        'name': 'mplus-deposit-mq',
+        'module': 'trade.normal_main',
+        'source_driver': 'cache.redis_source',
+        'source_conf': 'base',
+        'source_topic': 'buffer->topic{test}mq_keys',
+        'sink_driver': 'trade.main',
+        'sink_conf': 'base',
+        'parallelism': 1
+    },
     # {
     #     'name': 'mplus-click-mq',
     #     'module': 'click.main',

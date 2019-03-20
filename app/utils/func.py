@@ -169,3 +169,14 @@ class Func:
         half_hour_time = req_time - min_def * 60 - sec_def
         return half_hour_time
 
+    @staticmethod
+    def string2timestamp(st, time_format='%Y-%m-%d %H:%M:%S'):
+        # 把字符串转成时间戳形式
+        return time.mktime(time.strptime(st, time_format))
+
+    @staticmethod
+    def timestamp2string(st):
+        # 把时间戳转成日期字符串形式
+        time_obj = time.localtime(st)
+        return time.strftime("%Y-%m-%d %H:%M:%S", time_obj)
+

@@ -50,11 +50,11 @@ class ClickHouseApply(WindowFunction, FlatMapFunction):
     def apply(self, key, window, values, collector):
         self.__insert(values)
         for value in values:
-            collector.collect(1)
+            collector.collect(value)
 
     def flatMap(self, value, collector):
         self.__insert([value])
-        collector.collect(1)
+        collector.collect(value)
 
     def __insert(self, values):
         ck_list = []
