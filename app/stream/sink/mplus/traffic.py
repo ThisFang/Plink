@@ -1,20 +1,19 @@
 # -- coding: UTF-8
 
-import json
-import time
-import datetime
-from utils import Func
-from sqlalchemy import func
 from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction, MapFunction
 from org.apache.flink.streaming.api.functions.windowing import WindowFunction
 from org.apache.flink.api.java.functions import KeySelector
 from org.apache.flink.streaming.api.windowing.time.Time import milliseconds, seconds
+import json
+import time
+import datetime
+from sqlalchemy import func
 from app.stream.sink import base
 from app.stream.store.database import ck_table, ClickhouseStore
 from app.common.view_time_analysis import ViewTimeAnalysis
 from app.common.uv_calc import UvCalc
 from app.common.base import WEBSITE_NOT_IN_CK, WEBSITE_TO_STAT_REQUEST
-from app.utils import logger
+from app.utils import logger, Func
 from app.common.request import CurlToAnalysis
 
 
@@ -27,34 +26,32 @@ class Traffic:
         """
         data_stream = data_stream.map(base.ToData())
 
-        # click插入初始化
         ck_insert = base.ClickHouseApply()
-        ck_insert.set_connection('clickhouse')
 
         # 报表落地
-        reports = data_stream.key_by(ReportsTrafficKeyBy()). \
-            time_window(seconds(60)). \
+        data_stream.key_by(ReportsTrafficKeyBy()). \
+            time_window(milliseconds(60)). \
             apply(ReportsTrafficApply())
 
         # 详情落地
-        ck_insert.set_table('DetailsTraffic')
-        reports.flat_map(GetDetailsTraffic()). \
+        ck_insert.set_table(table=ck_table.DetailsTraffic)
+        data_stream.flat_map(GetDetailsTraffic()). \
             key_by(base.KeyBy()). \
-            time_window(seconds(10)). \
+            time_window(milliseconds(10)). \
             apply(ck_insert)
 
         # 收集visit_id
-        ck_insert.set_table('TrafficVisitId')
-        reports.flat_map(GetTrafficVisitId()). \
+        ck_insert.set_table(table=ck_table.TrafficVisitId)
+        data_stream.flat_map(GetTrafficVisitId()). \
             key_by(base.KeyBy()). \
-            time_window(seconds(10)). \
+            time_window(milliseconds(10)). \
             apply(ck_insert)
 
         # 详情落地（访问时长）
-        ck_insert.set_table('DetailsViewTime')
+        ck_insert.set_table(table=ck_table.DetailsViewTime)
         data_stream.flat_map(GetDetailsViewTime()). \
             key_by(VTTrafficKeyBy()). \
-            time_window(seconds(31)). \
+            time_window(milliseconds(31)). \
             apply(ck_insert)
 
 
@@ -72,7 +69,7 @@ class GetTrafficVisitId(FlatMapFunction):
             'req_time': traffic.get('req_time'),
             'req_date': traffic.get('req_date'),
         }
-        collector.collect(str(primary_dict))
+        collector.collect(json.dumps(primary_dict))
 
 
 class GetDetailsTraffic(FlatMapFunction):
@@ -117,8 +114,9 @@ class GetDetailsTraffic(FlatMapFunction):
             'market_content': traffic.get('market').get('content', ''),
             'market_term': traffic.get('market').get('term', ''),
         }
+
         if traffic.get('website').encode('utf-8') not in WEBSITE_NOT_IN_CK:
-            collector.collect(str(primary_dict))
+            collector.collect(json.dumps(primary_dict))
 
 
 class VTTrafficKeyBy(KeySelector):
@@ -157,7 +155,7 @@ class GetDetailsViewTime(FlatMapFunction):
                     'req_date': Func.get_date(vt_dict.get('sign'), '%Y-%m-%d'),
                     'view_time': vt_dict.get('view_time')
                 }
-                collector.collect(str(primary_dict))
+                collector.collect(json.dumps(primary_dict))
 
 
 class ReportsTrafficKeyBy(KeySelector):
@@ -179,7 +177,7 @@ class ReportsTrafficApply(WindowFunction):
         try:
             reports_key, reports_data = TrafficReports(values).to_dict()
         except Exception as e:
-            logger().error('REPORT INIT ERROR error:{} data:{}', e, values)
+            logger().error('REPORT INIT ERROR error:{} data:{}'.format(e, values))
         else:
             data = {
                 'topic': 'traffic',

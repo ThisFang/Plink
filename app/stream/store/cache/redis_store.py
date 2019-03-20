@@ -3,6 +3,8 @@
 import json
 import redis
 from conf import get_conf
+from app.utils import Func
+import time
 
 
 class RedisStore:
@@ -39,7 +41,7 @@ class RedisStore:
     @staticmethod
     def traffic_uv_redis_name(plat, agent_type, date, website):
         """访问uv的redis名字"""
-        redis_name = 'mplus:uv:click:{}_{}_{}_{}'.format(
+        redis_name = 'mplus:uv:traffic:{}_{}_{}_{}'.format(
             str(date),
             str(plat),
             str(agent_type),
@@ -62,10 +64,25 @@ class RedisStore:
     @staticmethod
     def push_app_uv_redis_name(plat, agent_type, date, detail_id):
         """极光推送app点击uv的redis名字"""
-        redis_name = 'mplus:uv:click:{}_{}_{}_{}'.format(
+        redis_name = 'mplus:uv:push_app:{}_{}_{}_{}'.format(
             str(date),
             str(plat),
             str(agent_type),
             str(detail_id)
         )
+        return redis_name
+
+    @staticmethod
+    def view_time_redis_name(plat, agent_type, visit_id, req_time):
+        """
+        获取访问时长redis的名字
+        :param plat:
+        :param agent_type:
+        :param visit_id:
+        :param req_time:
+        :return:
+        """
+        half_hour_time = Func.get_nearly_half_hour(req_time)
+        time_start = time.strftime('%Y%m%d_%H_%M', time.localtime(half_hour_time))
+        redis_name = 'mplus:view_time:{}_{}_{}:{}'.format(plat, agent_type, visit_id, time_start)
         return redis_name

@@ -37,7 +37,7 @@ class OperatorBase(SuperBase):
         if not sink:
             stream.output()
         else:
-            sink.write_by_stream(stream).output()
+            sink.write_by_stream(stream)
 
         # 3：启动任务
 
@@ -51,37 +51,18 @@ class NormalInitFlatMap(FlatMapFunction):
         """
         获取redis源头中的参数,normal初始化解析
         """
-        try:
-            value_dict = json.loads(value)
-        except Exception:
-            return
-
-        method = value_dict.get('Method')
-        if method != 'POST':
-            logger(log_prefix).warning('error method {}'.format(value))
-            return
-        ip = value_dict.get('Headers').get('host')
-        args = value_dict.get('Args')
-
-        if type(args).__name__ != 'dict':
-            try:
-                args = json.loads(args)
-            except Exception:
-                return
+        method, ip, args, gateway_uri, receive_time = value
+        args = json.loads(args)
+        logger('test').info(args)
         data = args.get('data')
 
         if type(data).__name__ != 'list':
-            logger(log_prefix).warning('cannot get data {}'.format(value))
+            logger(log_prefix).warning('cannot get data {}'.format(args))
             return
         topic = args.get('topic')
-        if not topic:
-            logger(log_prefix).warning('cannot get topic {}'.format(value))
-            return
         if topic not in ALLOW_TOPIC:
-            logger(log_prefix).warning('error topic {}'.format(value))
+            logger(log_prefix).warning('error topic {}'.format(args))
             return
-
-        logger(log_prefix).info(len(str(args)))
 
         # 过长做切片处理
         piece_len = 10
@@ -95,22 +76,11 @@ class CountlyInitFlatMap(FlatMapFunction):
         """
         获取redis源头中的参数,countly初始化解析
         """
-        try:
-            value_dict = json.loads(value)
-        except Exception:
-            return
+        method, ip, args, gateway_uri, receive_time = value
+        args = json.loads(args)
 
-        method = value_dict.get('Method')
-        if method != 'POST':
-            return
-        ip = value_dict.get('Headers').get('host')
-        args = value_dict.get('Args')
-
-        events = args.get('events')
-        if not events:
-            return
         try:
-            events = json.loads(events)
+            events = json.loads(args.get('events'))
         except Exception:
             return
 
@@ -123,10 +93,9 @@ class CountlyInitFlatMap(FlatMapFunction):
             if not data:
                 continue
             try:
-                data = json.loads(data.decode('utf-8'))
+                data = json.loads(data)
             except Exception:
                 continue
-            logger(log_prefix).info(len(json.dumps(args)))
             collector.collect((topic, ip, json.dumps(data)))
 
 
@@ -135,22 +104,11 @@ class CountlyInitToGatewayFlatMap(FlatMapFunction):
         """
         获取redis源头中的参数,countly初始化解析
         """
-        try:
-            value_dict = json.loads(value)
-        except Exception:
-            return
+        method, ip, args, gateway_uri, receive_time = value
+        args = json.loads(args)
 
-        method = value_dict.get('Method')
-        if method != 'POST':
-            return
-        ip = value_dict.get('Headers').get('host')
-        args = value_dict.get('Args')
-
-        events = args.get('events')
-        if not events:
-            return
         try:
-            events = json.loads(events)
+            events = json.loads(args.get('events'))
         except Exception:
             return
 
@@ -162,17 +120,16 @@ class CountlyInitToGatewayFlatMap(FlatMapFunction):
             data = segmentation.get('data')
             if not data:
                 continue
-            try:
-                data = json.loads(data.decode('utf-8'))
-            except Exception:
-                continue
             uri = str(ALLOW_TOPIC_DICT.get(topic))
-
             # 尊享版相关需求收集发送给base
             if topic in ['app_open', 'vip_open', 'app_vip_open']:
                 if topic == 'app_vip_open':
                     topic = 'vip_open'
                 uri = '/base'
+                try:
+                    data = json.loads(data)
+                except Exception:
+                    continue
                 send_data = {
                     'event_file': topic,
                     'sign': segmentation.get('sign'),
@@ -180,7 +137,7 @@ class CountlyInitToGatewayFlatMap(FlatMapFunction):
                 }
                 CurlToGateway(uri, json=send_data).curl()
                 continue
-            collector.collect((uri, topic, ip, json.dumps(data)))
+            collector.collect((uri, topic, ip, data))
 
 
 class TopicSelector(OutputSelector):

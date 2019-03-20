@@ -1,13 +1,14 @@
 # -- coding: UTF-8
 
+from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction, MapFunction
 import copy
 import json
 from sqlalchemy import func
 from sqlalchemy import not_, or_, desc
 from app.utils import Func
-from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction, MapFunction
 from app.stream.sink import base
 from app.utils import logger
+from app.utils.enums import TargetEnum
 from app.common.request import CurlToAnalysis
 from app.stream.store.database import ck_table, ClickhouseStore
 import time
@@ -23,13 +24,11 @@ class Target:
         """
         data_stream = data_stream.map(base.ToData())
 
-        ck_insert = base.ClickHouseApply()
-        ck_insert.set_connection('clickhouse')
-        ck_insert.set_table('DetailsTarget')
-
         # 报表落地
         data_stream = data_stream.flat_map(ReportsTargetFlatMap())
 
+        ck_insert = base.ClickHouseApply()
+        ck_insert.set_table(table=ck_table.DetailsTarget)
         data_stream.flat_map(GetDetailsTarget()). \
             flat_map(ck_insert)
 
@@ -61,22 +60,21 @@ class GetDetailsTarget(FlatMapFunction):
             'medium': target.get('medium'),
             'extra': target.get('extra'),
         }
-        collector.collect(str(primary_dict))
+        collector.collect(json.dumps(primary_dict))
 
 
 class ReportsTargetFlatMap(FlatMapFunction):
     """
     stat_target报表写入
     """
-
     def flatMap(self, value, collector):
         value = json.loads(value)
         # 增加渠道价值报表推送
         self.update_stat_channel_value(value)
 
-        self.reports_list = TargetReports(value, collector).to_dict()
-        if self.reports_list:
-            for reports_key, reports_data in self.reports_list:
+        reports_list = TargetReports(value, collector).to_dict()
+        if reports_list:
+            for reports_key, reports_data in reports_list:
                 self.update_stat_target(reports_key, reports_data)
 
     @staticmethod
@@ -94,7 +92,7 @@ class ReportsTargetFlatMap(FlatMapFunction):
     @staticmethod
     def update_stat_channel_value(target):
         target_type = target.get('target_type')
-        if target_type is not 4:
+        if target_type is not TargetEnum.N:
             return
 
         req_time = target.get('req_time')
@@ -131,7 +129,7 @@ class TargetReports:
         self.details = details
         self.ck_session = ClickhouseStore().get_session()
         # 判断是否NL,根据结果走不同分支
-        if self.details.get('target_type') in [3, 4, 5]:
+        if self.details.get('target_type') in [TargetEnum.D, TargetEnum.N, TargetEnum.A]:
             self._explode_exist('account')
         else:
             self._explode_exist('mobile')
@@ -141,31 +139,26 @@ class TargetReports:
         if not self.exist:
             self._a_complete_mobile()
             self._reports_easy()
-            collector.collect(str(self.details))
+            collector.collect(json.dumps(self.details))
 
     def _a_complete_mobile(self):
         target_type = self.details.get('target_type')
         DetailsTarget = ck_table.DetailsTarget
-        if target_type == 4:
+        if target_type == TargetEnum.N:
             mobile = self.details.get('mobile')
-            db = ClickHouseApply()
-            try:
-                table_name = 'db_osteam_sm_mplus.details_target'
-                expr = " mobile='{}' ".format(mobile)
-                condition = " plat={} and agent_type={} and target_type=5 and account='{}'".format(
-                    self.details.get('plat'),
-                    self.details.get('agent_type'),
-                    self.details.get('account')
-                )
-                db.update(table_name, expr, condition)
-            except Exception as err:
-                logger('target').error('{}, {}'.format(err, self.details.account))
-        elif target_type == 5:
+            update_dict = {'mobile': '\'{}\''.format(mobile)}
+            filter_obj = self.ck_session.query(
+                func.anyLast(DetailsTarget.mobile)). \
+                filter(DetailsTarget.plat == self.details.get('plat')). \
+                filter(DetailsTarget.account == self.details.get('account')). \
+                filter(DetailsTarget.target_type == TargetEnum.A)
+            ClickhouseStore.update(DetailsTarget, filter_obj, update_dict)
+        elif target_type == TargetEnum.A:
             mobile = self.ck_session.query(
                 func.anyLast(DetailsTarget.mobile)). \
                 filter(DetailsTarget.plat == self.details.get('plat')). \
                 filter(DetailsTarget.account == self.details.get('account')). \
-                filter(DetailsTarget.target_type == 4). \
+                filter(DetailsTarget.target_type == TargetEnum.N). \
                 first()
             if mobile:
                 mobile, = mobile
@@ -182,8 +175,8 @@ class TargetReports:
         DetailsTarget = ck_table.DetailsTarget
         target_type = self.details.get('target_type')
 
-        if target_type == 1:
-            self.all_route = [(1, None, None, None, None)]
+        if target_type == TargetEnum.V:
+            self.all_route = [(TargetEnum.V, None, None, None, None)]
         else:
             self.all_route = self.ck_session.query(
                 func.anyLast(DetailsTarget.target_type),
@@ -193,13 +186,15 @@ class TargetReports:
                 func.min(DetailsTarget.req_time)). \
                 filter(DetailsTarget.plat == self.details.get('plat')). \
                 filter(DetailsTarget.mobile == self.details.get('mobile')). \
-                filter(DetailsTarget.target_type > 1). \
+                filter(DetailsTarget.target_type > TargetEnum.V). \
                 group_by(DetailsTarget.target_type). \
                 all()
         return self.all_route
 
     def _get_expect_all_route(self):
         """ 根据当前target_type获取预期所有route """
+        reports = []
+
         source_route_tuple_list = [(target_type, agent_type, req_time) for target_type, agent_type, _, _, req_time in self.all_route]
         _le_route_tuple_list = list(filter(lambda x: x[0] < self.details.get('target_type'), source_route_tuple_list))
         _gt_route_tuple_list = list(filter(lambda x: x[0] > self.details.get('target_type'), source_route_tuple_list))
@@ -210,7 +205,7 @@ class TargetReports:
 
         route = copy.copy(_le_route)
         route.append(self.details.get('target_type'))
-        reports = []
+
         reports.append(self.__reports_dict(
             self.details.get('req_time'),
             self.details.get('agent_type'),
@@ -264,7 +259,7 @@ class TargetReports:
             count()
 
         # 访问的去重数据量太大，日志无参考价值
-        if exist and self.details.get('target_type') != 1:
+        if exist and self.details.get('target_type') != TargetEnum.V:
             logger('target').info('target exist !{}'.format(self.details))
 
         if exist > 0:
@@ -274,14 +269,16 @@ class TargetReports:
 
     @staticmethod
     def _get_expand_route(route_list):
-        route_list = [str(route) for route in route_list]
+
         # 默认补齐访问数据
-        if '1' not in route_list:
-            route_list.insert(0, '1')
+        if TargetEnum.V not in route_list:
+            route_list.insert(0, TargetEnum.V)
 
         # 如果只有访问和入金即1,5则默认加上真实开户
-        if ('5' in route_list) and len(route_list) == 2:
-            route_list = ['1', '4', '5']
+        if (TargetEnum.A in route_list) and len(route_list) == 2:
+            route_list = [TargetEnum.V, TargetEnum.N, TargetEnum.A]
+
+        route_list = [str(route) for route in route_list]
         expand_route = '-'.join(route_list)
         return expand_route
 

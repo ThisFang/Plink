@@ -1,9 +1,9 @@
 # -- coding: UTF-8
 
+from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
 import json
 from app.utils import Func
 from app.utils import logger
-from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
 
 
 class Traffic:
@@ -28,11 +28,12 @@ class TrafficSave(FlatMapFunction):
             try:
                 traffic_args = TrafficArgs(traffic)
                 traffic_obj = traffic_args.to_dict()
-                traffic_obj['ip'] = ip
+                if traffic_obj.get('agent_type') not in [4, 5]:
+                    traffic_obj['ip'] = ip
             except Exception as e:
                 logger().error('{}, {}, {}'.format(topic, e, traffic))
             else:
-                collector.collect((topic, str(traffic_obj)))
+                collector.collect((topic, json.dumps(traffic_obj)))
 
 
 class TrafficArgs:
@@ -87,12 +88,12 @@ class TrafficArgs:
 
     def _explode_website(self):
         website = self.args.get('website')
-        self.website = website.decode('utf-8')
+        self.website = website
 
     def _explode_url(self):
-        self.url = self.args.get('url', '').decode('utf-8')
+        self.url = self.args.get('url', '')
         self.host = Func.url_parse(self.url).hostname or ''
-        self.ref_url = self.args.get('ref_url', '').decode('utf-8')
+        self.ref_url = self.args.get('ref_url', '')
 
     def _explode_ip(self):
         self.ip = self.args.get('ip', '')
@@ -117,7 +118,7 @@ class TrafficArgs:
 
     def _explode_extra(self):
         extra = self.args.get('extra', '')
-        self.extra = extra.decode('utf-8')
+        self.extra = extra
 
     def _explode_market(self):
         market_args = self.args.get('market')
@@ -125,19 +126,19 @@ class TrafficArgs:
             if type(market_args) is not dict:
                 raise ValueError('market error')
             market = {
-                'source': market_args.get('source', '').decode('utf-8'),
-                'medium': market_args.get('medium', '').decode('utf-8'),
-                'campaign': market_args.get('campaign', '').decode('utf-8'),
-                'content': market_args.get('content', '').decode('utf-8'),
-                'term': market_args.get('term', '').decode('utf-8'),
+                'source': market_args.get('source', ''),
+                'medium': market_args.get('medium', ''),
+                'campaign': market_args.get('campaign', ''),
+                'content': market_args.get('content', ''),
+                'term': market_args.get('term', ''),
             }
         else:
             market = {
-                'source': self.args.get('source', '').decode('utf-8'),
-                'medium': self.args.get('medium', '').decode('utf-8'),
-                'campaign': self.args.get('campaign', '').decode('utf-8'),
-                'content': self.args.get('content', '').decode('utf-8'),
-                'term': self.args.get('term', '').decode('utf-8'),
+                'source': self.args.get('source', ''),
+                'medium': self.args.get('medium', ''),
+                'campaign': self.args.get('campaign', ''),
+                'content': self.args.get('content', ''),
+                'term': self.args.get('term', ''),
             }
 
         self.market = market

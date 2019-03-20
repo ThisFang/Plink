@@ -1,15 +1,16 @@
 # -- coding: UTF-8
 
-import time
 from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction, MapFunction
 from org.apache.flink.streaming.api.functions.windowing import WindowFunction
 from org.apache.flink.api.java.functions import KeySelector
 from org.apache.flink.streaming.api.windowing.time.Time import milliseconds, seconds
+import time
 from app.stream.sink import base
 from app.utils import logger
 from app.common.request import CurlToAnalysis
 import json
 from app.common.uv_calc import UvCalc
+from app.stream.store.database import ck_table
 
 
 class PushApp:
@@ -21,23 +22,18 @@ class PushApp:
         """
         data_stream = data_stream.map(base.ToData())
 
-        # click插入初始化
-        ck_insert = base.ClickHouseApply()
-        ck_insert.set_connection('clickhouse')
-
-        # 格式化数据
-        ck_insert.set_table('DetailsPushApp')
         data_stream = data_stream.flat_map(GetDetailsPushApp())
 
+        window_stream = data_stream.key_by(PushAppKeyBy()). \
+            time_window(seconds(5))
+
         # 详情落地
-        data_stream.key_by(PushAppKeyBy()). \
-            time_window(seconds(5)).\
-            apply(ck_insert)
+        # ck_insert = base.ClickHouseApply()
+        # ck_insert.set_table(table=ck_table.DetailsPushApp)
+        # window_stream.apply(ck_insert)
 
         # 报表推送
-        data_stream.key_by(PushAppKeyBy()). \
-            time_window(seconds(5)).\
-            apply(ReportsPushAppApply())
+        window_stream.apply(ReportsPushAppApply())
 
 
 class GetDetailsPushApp(FlatMapFunction):
@@ -67,7 +63,7 @@ class GetDetailsPushApp(FlatMapFunction):
             'detail_id': push_app.get('detail_id'),
             'extra': push_app.get('extra'),
         }
-        collector.collect(str(primary_dict))
+        collector.collect(json.dumps(primary_dict))
 
 
 class PushAppKeyBy(KeySelector):
@@ -78,9 +74,7 @@ class PushAppKeyBy(KeySelector):
 
 
 class ReportsPushAppApply(WindowFunction):
-    """
-    stat_traffic报表写入
-    """
+    """报表写入"""
     def apply(self, key, window, values, collector):
         for value in values:
             collector.collect(value)
@@ -92,7 +86,6 @@ class ReportsPushAppApply(WindowFunction):
             logger().error('REPORT INIT ERROR error:{} data:{}', e, values)
         else:
             self.update_stat_push_details(reports_key, reports_data)
-            pass
 
     @staticmethod
     def update_stat_push_details(reports_key, reports_data):
@@ -120,10 +113,7 @@ class ReportsPushAppApply(WindowFunction):
 
 
 class PushAppReports:
-    """
-    针对单一stat_time,plat,agent_type,website
-    聚合报表
-    """
+    """聚合报表"""
     def __init__(self, details_list):
         self.details_list = details_list
         self.__key_dict()
@@ -173,5 +163,3 @@ class PushAppReports:
 
     def to_dict(self):
         return self._key_dict, self._data_dict
-
-

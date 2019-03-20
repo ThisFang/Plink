@@ -155,3 +155,17 @@ class Func:
             res = res + i[0].upper() + i[1:]
         return res
 
+    @staticmethod
+    def get_nearly_half_hour(req_time):
+        """
+        获取临近的半小时时间戳
+        :param req_time:时间戳
+        :return:
+        """
+        req_time_array = time.localtime(req_time)
+        min_def = req_time_array.tm_min % 30
+        sec_def = req_time_array.tm_sec
+
+        half_hour_time = req_time - min_def * 60 - sec_def
+        return half_hour_time
+

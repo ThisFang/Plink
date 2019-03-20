@@ -6,6 +6,7 @@ import uuid
 from app.utils.func import Func
 from sqlalchemy.dialects import registry
 from conf import get_conf
+from app.utils import logger
 
 
 class ClickhouseStore:
@@ -32,7 +33,10 @@ class ClickhouseStore:
         :param data_list: 数据, 参考官方文档
         :return:
         """
-        session.execute(table.__table__.insert(), data_list)
+        try:
+            session.execute(table.__table__.insert(), data_list)
+        except Exception as e:
+            logger().error('CK INSERT ERROR error:{} data:{}', e, data_list)
 
     @staticmethod
     def insert_single(session, table, data):
@@ -43,7 +47,10 @@ class ClickhouseStore:
         :param data: 数据, 参考官方文档
         :return:
         """
-        session.execute(table.__table__.insert(), [data])
+        try:
+            session.execute(table.__table__.insert(), [data])
+        except Exception as e:
+            logger().error('CK INSERT ERROR error:{} data:{}', e, data)
 
     @staticmethod
     def delete(table, filter_obj):
@@ -56,7 +63,10 @@ class ClickhouseStore:
         """
         filter_sql, filter_value = ClickhouseStore.__filter_format(filter_obj, table.__tablename__)
         exec_sql = 'ALTER TABLE {} DELETE WHERE {}'.format(table.__table__, filter_sql)
-        filter_obj.session.execute(exec_sql, filter_value)
+        try:
+            filter_obj.session.execute(exec_sql, filter_value)
+        except Exception as e:
+            logger().error('CK DELETE ERROR error:{} sql:{}, data:{}', e, exec_sql, filter_value)
 
     @staticmethod
     def update(table, filter_obj, update_dict):
@@ -72,7 +82,10 @@ class ClickhouseStore:
         filter_sql, filter_value = ClickhouseStore.__filter_format(filter_obj, table.__tablename__)
         update_sql = ClickhouseStore.__update_format(update_dict)
         exec_sql = 'ALTER TABLE {} UPDATE {} WHERE {}'.format(table.__table__, update_sql, filter_sql)
-        filter_obj.session.execute(exec_sql, filter_value)
+        try:
+            filter_obj.session.execute(exec_sql, filter_value)
+        except Exception as e:
+            logger().error('CK UPDATE ERROR error:{} sql:{}, data:{}', e, exec_sql, filter_value)
 
     @staticmethod
     def __filter_format(filter_obj, table_name):

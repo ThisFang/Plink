@@ -32,7 +32,7 @@ class PushAppSave(FlatMapFunction):
                 logger().error('{}, {}, {}'.format(topic, e, push_app))
             else:
                 """收集供后面使用"""
-                collector.collect((topic, str(push_app_obj)))
+                collector.collect((topic, json.dumps(push_app_obj)))
 
 
 class PushAppArgs:

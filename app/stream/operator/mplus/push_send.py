@@ -1,8 +1,8 @@
 # -- coding: UTF-8
 
 import json
-from utils import Func
-from utils import logger
+from app.utils import Func
+from app.utils import logger
 from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
 
 
@@ -31,7 +31,7 @@ class PushSendSave(FlatMapFunction):
             except Exception as e:
                 logger().error('{}, {}, {}'.format(topic, e, push_send))
             else:
-                collector.collect((topic, str(push_send_obj)))
+                collector.collect((topic, json.dumps(push_send_obj)))
 
 
 class PushSendArgs:
@@ -112,17 +112,17 @@ class PushSendArgs:
 
     def _explode_content(self):
         title = self.args.get('title', '')
-        self.title = title.decode('utf-8')
+        self.title = title
 
         content = self.args.get('content', '')
-        self.content = content.decode('utf-8')
+        self.content = content
 
         url = self.args.get('url', '')
         self.url = url
 
     def _explode_extra(self):
         extra = self.args.get('extra', '')
-        self.extra = extra.decode('utf-8')
+        self.extra = extra
 
     def __dict(self):
         push_send = {

@@ -1,7 +1,5 @@
 # -- coding: UTF-8
 
-from utils import Func
-from common import SuperBase
 from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction, MapFunction
 from org.apache.flink.api.java.functions import KeySelector
 from org.apache.flink.streaming.api.windowing.time.Time import milliseconds, seconds
@@ -12,7 +10,7 @@ from app.stream.store.database import ck_table, ClickhouseStore
 import json
 
 
-class PushSend(SuperBase):
+class PushSend:
 
     @staticmethod
     def stream_end(data_stream):
@@ -21,18 +19,14 @@ class PushSend(SuperBase):
         """
         data_stream = data_stream.map(base.ToData())
 
-        # click插入初始化
-        ck_insert = base.ClickHouseApply()
-        ck_insert.set_connection('clickhouse')
-
-        # 格式化数据
-        ck_insert.set_table('DetailsPushSend')
         details = data_stream.flat_map(GetDetailsPushSend())
 
         # 报表推送
         details.flat_map(ReportsPushSendFlatMap())
 
         # 详情落地
+        ck_insert = base.ClickHouseApply()
+        ck_insert.set_table(table=ck_table.DetailsPushSend)
         details.key_by(PushSendKeyBy()). \
             time_window(seconds(5)). \
             apply(ck_insert)
@@ -68,7 +62,7 @@ class GetDetailsPushSend(FlatMapFunction):
             'url': push_send.get('url'),
             'extra': push_send.get('extra'),
         }
-        collector.collect(str(primary_dict))
+        collector.collect(json.dumps(primary_dict))
 
 
 class PushSendKeyBy(KeySelector):
@@ -90,7 +84,7 @@ class ReportsPushSendFlatMap(FlatMapFunction):
             logger().error('REPORT INIT ERROR error:{} data:{}', e, value)
         else:
             self.update_stat_push_reports(reports)
-            collector.collect(str(value))
+            collector.collect(json.dumps(value))
 
     @staticmethod
     def update_stat_push_reports(reports):

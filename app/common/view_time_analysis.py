@@ -2,6 +2,7 @@
 
 
 import time
+import json
 from operator import itemgetter
 from app.stream.store.cache import RedisStore
 
@@ -10,6 +11,10 @@ class ViewTimeAnalysis:
     def __init__(self):
         self.view_time_ck_detail = None
         self.redis_conn = RedisStore().get_connection()
+        self.plat = None
+        self.agent_type = None
+        self.visit_id = None
+        self.channel = None
 
     def analysis(self, plat, agent_type, channel, visit_id, website, req_time):
         """
@@ -22,7 +27,7 @@ class ViewTimeAnalysis:
         :param req_time:
         :return:
         """
-        redis_name = self.__redis_name(plat, agent_type, visit_id, req_time)
+        redis_name = RedisStore.view_time_redis_name(plat, agent_type, visit_id, req_time)
         self.plat = plat
         self.agent_type = agent_type
         self.visit_id = visit_id
@@ -51,7 +56,6 @@ class ViewTimeAnalysis:
             return
         # 拆分并排序hash
         view_redis_key_list = [self.__split_redis_hash_key(key) for key in view_redis_key_list]
-        # view_redis_key_list = [(key[1], int(key[0])) for key in view_redis_key_list]
         view_redis_key_list = sorted(view_redis_key_list, key=itemgetter(0))
 
         # 获取最新访问记录
@@ -67,7 +71,6 @@ class ViewTimeAnalysis:
                     self.__combine_redis_hash_value(req_time, req_time)
                 )
                 return
-
             self.__update_before_view_redis(
                 redis_name, last_view[1], last_view[0], req_time
             )
@@ -96,7 +99,7 @@ class ViewTimeAnalysis:
         """
         view_key = ViewTimeAnalysis.__combine_redis_hash_key(website, sign)
         view_value = self.redis_conn.hget(redis_name, view_key)
-        view_value = eval(view_value)
+        view_value = json.loads(view_value)
 
         # 在起始结束时间中间不处理
         delta_start_time = view_value.get('st') - req_time
@@ -117,7 +120,7 @@ class ViewTimeAnalysis:
         self.redis_conn.hset(
             redis_name,
             ViewTimeAnalysis.__combine_redis_hash_key(website, sign),
-            view_value
+            json.dumps(view_value)
         )
         self.view_time_ck_detail = self.__combine_view_time_ck(
             website.decode('utf-8'),
@@ -157,35 +160,6 @@ class ViewTimeAnalysis:
         return nearly_same_website_view
 
     @staticmethod
-    def __redis_name(plat, agent_type, visit_id, req_time):
-        """
-        获取访问时长redis的名字
-        :param plat:
-        :param agent_type:
-        :param visit_id:
-        :param req_time:
-        :return:
-        """
-        half_hour_time = ViewTimeAnalysis.__get_nearly_half_hour(req_time)
-        time_start = time.strftime('%Y%m%d_%H_%M', time.localtime(half_hour_time))
-        redis_name = 'mplus:view_time:{}_{}_{}:{}'.format(plat, agent_type, visit_id, time_start)
-        return redis_name
-
-    @staticmethod
-    def __get_nearly_half_hour(req_time):
-        """
-        获取临近的半小时时间戳
-        :param req_time:时间戳
-        :return:
-        """
-        req_time_array = time.localtime(req_time)
-        min_def = req_time_array.tm_min % 30
-        sec_def = req_time_array.tm_sec
-
-        half_hour_time = req_time - min_def * 60 - sec_def
-        return half_hour_time
-
-    @staticmethod
     def __combine_redis_hash_key(website, sign):
         """
         组合redis hash的键值对
@@ -217,7 +191,7 @@ class ViewTimeAnalysis:
             'st': start_time,
             'et': end_time
         }
-        return value
+        return json.dumps(value)
 
     def __combine_view_time_ck(self, website, sign, view_time):
         """

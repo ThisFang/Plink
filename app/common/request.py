@@ -17,6 +17,7 @@ class RequestBase(object):
         self._http_method = http_method
         self._url = url
         self._kwargs = kwargs
+        self._data = kwargs.get('json', kwargs.get('data'))
 
     def get_response(self):
         res = requests.request(
@@ -101,12 +102,12 @@ class CurlToGateway(RequestBase):
 
     def fail(self):
         """失败回调"""
-        logger(log_prefix).notice('[GATEWAY_CURL] [FAIL] {} {} {}'.format(self._url, self._kwargs, self.res))
+        logger(log_prefix).notice('[GATEWAY_CURL] [FAIL] {} {} {}'.format(self._url, self._data, self.res))
         return self.res
 
     def success(self):
         """成功回调"""
-        # logger(log_prefix).notice('[GATEWAY_CURL] [SUCCESS] {} {} {}'.format(self._url, self._kwargs, self.res))
+        # logger(log_prefix).notice('[GATEWAY_CURL] [SUCCESS] {} {} {}'.format(self._url, self._data, self.res))
         return self.res
 
 
@@ -136,12 +137,12 @@ class CurlToAnalysis(RequestBase):
 
     def fail(self):
         """失败回调"""
-        logger(log_prefix).notice('[CURL] [FAIL] {} {} {}'.format(self._url, self._kwargs, self.res))
+        logger(log_prefix).notice('[CURL] [FAIL] {} {} {}'.format(self._url, self._data, self.res))
         self.reset_retry()
         return self.res
 
     def success(self):
         """成功回调"""
-        logger(log_prefix).notice('[CURL] [SUCCESS] {} {} {}'.format(self._url, self._kwargs, self.res))
+        logger(log_prefix).notice('[CURL] [SUCCESS] {} {} {}'.format(self._url, self._data, self.res))
         self.reset_retry()
         return self.res

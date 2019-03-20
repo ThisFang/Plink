@@ -1,11 +1,11 @@
 # -- coding: UTF-8
 
+from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
 import json
 from app.utils import Func
 from app.utils import logger
-from app.common import SuperBase
-from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
 import uuid
+from app.utils.enums import TargetEnum
 
 
 class Target:
@@ -27,16 +27,14 @@ class TargetSave(FlatMapFunction):
         target_list = json.loads(target_list)
         for target in target_list:
             try:
-                logger('origin').notice('target get {}'.format(str(target)))
+                logger('target').notice('target get {}'.format(target))
                 target_obj = TargetArgs(target)
                 target_obj = target_obj.to_dict()
-                if target_obj.get('target_type') in [1]:
-                    target_obj['ip'] = ip
             except Exception as e:
                 logger().error('{}, {}, {}'.format(topic, e, target))
             else:
                 """收集供后面使用"""
-                collector.collect((topic, str(target_obj)))
+                collector.collect((topic, json.dumps(target_obj)))
 
 
 class TargetArgs:
@@ -100,7 +98,7 @@ class TargetArgs:
 
     def _explode_extra(self):
         extra = self.args.get('extra', '')
-        self.extra = extra.decode('utf-8')
+        self.extra = extra
 
     def _explode_target_type(self):
         target_type = int(self.args.get('target_type'))
@@ -113,22 +111,22 @@ class TargetArgs:
     def _explode_visit_id(self):
         visit_id = self.args.get('visit_id', '')
         visit_id = str(visit_id)
-        if visit_id == '00000000-0000-0000-0000-000000000000' and (self.target_type in [3, 4]):
+        if visit_id == '00000000-0000-0000-0000-000000000000' and (self.target_type in [TargetEnum.D, TargetEnum.N]):
             visit_id = str(uuid.uuid4())
         self.visit_id = visit_id
 
     def _explode_market(self):
-        self.source = self.args.get('source', '(not set)').decode('utf-8')
-        self.medium = self.args.get('medium', '(not set)').decode('utf-8')
+        self.source = self.args.get('source', '(not set)')
+        self.medium = self.args.get('medium', '(not set)')
 
     def __check_target_type(self):
         """不同target必须字段检测"""
         target_check_list = {
-            1: [],
-            2: ['mobile'],
-            3: ['mobile', 'account'],
-            4: ['mobile', 'account'],
-            5: ['account'],
+            TargetEnum.V: [],
+            TargetEnum.NL: ['mobile'],
+            TargetEnum.D: ['mobile', 'account'],
+            TargetEnum.N: ['mobile', 'account'],
+            TargetEnum.A: ['account'],
         }
         check_list = target_check_list.get(self.target_type)
         for attr in check_list:

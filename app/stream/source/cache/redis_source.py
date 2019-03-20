@@ -50,8 +50,15 @@ class RedisSource(SourceBase):
         """
         if mq_key:
             for element in mq_elements:
-                element = str(element)
-                ctx.collect(element)
-
+                element = json.loads(element)
+                method = element.get('Method')
+                if method != 'POST':
+                    continue
+                headers = element.get('Headers')
+                ip = headers.get('host')
+                args = json.dumps(element.get('Args'))
+                gateway_uri = element.get('Uri')
+                receive_time = element.get('ReceiveTime')
+                ctx.collect((method, ip, args, gateway_uri, receive_time))
         return mq_key
 

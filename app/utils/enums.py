@@ -3,7 +3,6 @@
 
 class PayStatusEnum:
     """ 支付状态 """
-    
     # 待支付
     pending = 1
     # 支付成功
@@ -31,14 +30,14 @@ class IsFirstEnum:
     no = 2
 
 
-class TargetTypeEnum:
+class TargetEnum:
     # 访问
-    v = 1
+    V = 1
     # 客户信息获取
-    nl = 2
+    NL = 2
     # 模拟开户
-    d = 3
+    D = 3
     # 真实开户
-    n = 4
+    N = 4
     # 首次入金
-    a = 5
+    A = 5
