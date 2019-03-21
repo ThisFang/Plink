@@ -2,8 +2,7 @@
 
 from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
 import json
-from app.utils import Func
-from app.utils import logger
+from app.utils import Func, logger, LogName
 
 
 class Traffic:
@@ -31,18 +30,12 @@ class TrafficSave(FlatMapFunction):
                 if traffic_obj.get('agent_type') not in [4, 5]:
                     traffic_obj['ip'] = ip
             except Exception as e:
-                logger().error('{}, {}, {}'.format(topic, e, traffic))
+                logger(LogName.TRAFFIC).error('{}, {}, {}'.format(topic, e, traffic))
             else:
                 collector.collect((topic, json.dumps(traffic_obj)))
 
 
 class TrafficArgs:
-    """
-    将redis拿到的traffic格式化成对象
-    """
-    def __str__(self):
-        return self.to_json()
-
     def __init__(self, args):
         self.args = args
         # 解析参数

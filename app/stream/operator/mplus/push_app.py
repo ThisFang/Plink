@@ -36,12 +36,6 @@ class PushAppSave(FlatMapFunction):
 
 
 class PushAppArgs:
-    """
-    将redis拿到的PushApp格式化成对象
-    """
-    def __str__(self):
-        return self.to_json()
-
     def __init__(self, args):
         self.args = args
         # 解析参数

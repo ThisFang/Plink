@@ -1,14 +1,11 @@
-# -- coding: UTF-8 
+# -- coding: UTF-8
+from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction, MapFunction
+from org.apache.flink.streaming.api.collector.selector import OutputSelector
 from app.common import SuperBase
 from app.common.base import ALLOW_TOPIC_DICT, ALLOW_TOPIC
 import json
-from app.utils import logger
+from app.utils import logger, LogName
 from app.common.request import CurlToGateway
-from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction, MapFunction
-from org.apache.flink.streaming.api.collector.selector import OutputSelector
-
-
-log_prefix = 'origin'
 
 
 class OperatorBase(SuperBase):
@@ -53,15 +50,15 @@ class NormalInitFlatMap(FlatMapFunction):
         """
         method, ip, args, gateway_uri, receive_time = value
         args = json.loads(args)
-        logger('test').info(args)
+        # logger(LogName.TEST).info(args)
         data = args.get('data')
 
         if type(data).__name__ != 'list':
-            logger(log_prefix).warning('cannot get data {}'.format(args))
+            logger(LogName.ORIGIN).warning('cannot get data {}'.format(args))
             return
         topic = args.get('topic')
         if topic not in ALLOW_TOPIC:
-            logger(log_prefix).warning('error topic {}'.format(args))
+            logger(LogName.ORIGIN).warning('error topic {}'.format(args))
             return
 
         # 过长做切片处理

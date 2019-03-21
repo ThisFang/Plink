@@ -35,12 +35,6 @@ class PushSendSave(FlatMapFunction):
 
 
 class PushSendArgs:
-    """
-    将redis拿到的PushSend格式化成对象
-    """
-    def __str__(self):
-        return self.to_json()
-
     def __init__(self, args):
         self.args = args
         # 解析参数

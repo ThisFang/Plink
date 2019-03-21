@@ -74,7 +74,6 @@ class PushAppKeyBy(KeySelector):
 
 
 class ReportsPushAppApply(WindowFunction):
-    """报表写入"""
     def apply(self, key, window, values, collector):
         for value in values:
             collector.collect(value)
@@ -113,7 +112,6 @@ class ReportsPushAppApply(WindowFunction):
 
 
 class PushAppReports:
-    """聚合报表"""
     def __init__(self, details_list):
         self.details_list = details_list
         self.__key_dict()

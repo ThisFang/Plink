@@ -13,7 +13,7 @@ from app.stream.store.database import ck_table, ClickhouseStore
 from app.common.view_time_analysis import ViewTimeAnalysis
 from app.common.uv_calc import UvCalc
 from app.common.base import WEBSITE_NOT_IN_CK, WEBSITE_TO_STAT_REQUEST
-from app.utils import logger, Func
+from app.utils import logger, Func, LogName
 from app.common.request import CurlToAnalysis
 
 
@@ -142,7 +142,7 @@ class GetDetailsViewTime(FlatMapFunction):
         try:
             vt_dict = ViewTimeAnalysis().analysis(plat, agent_type, channel, visit_id, website, req_time)
         except Exception as e:
-            logger().error('{}, {}'.format(e, value))  # 调试时使用
+            logger(LogName.TRAFFIC).error('{}, {}'.format(e, value))  # 调试时使用
         else:
             if vt_dict is not None:
                 primary_dict = {
@@ -167,9 +167,6 @@ class ReportsTrafficKeyBy(KeySelector):
 
 
 class ReportsTrafficApply(WindowFunction):
-    """
-    stat_traffic报表写入
-    """
     def apply(self, key, window, values, collector):
         for value in values:
             collector.collect(value)
@@ -177,7 +174,7 @@ class ReportsTrafficApply(WindowFunction):
         try:
             reports_key, reports_data = TrafficReports(values).to_dict()
         except Exception as e:
-            logger().error('REPORT INIT ERROR error:{} data:{}'.format(e, values))
+            logger(LogName.TRAFFIC).error('REPORT INIT ERROR error:{} data:{}'.format(e, values))
         else:
             data = {
                 'topic': 'traffic',
@@ -189,10 +186,6 @@ class ReportsTrafficApply(WindowFunction):
 
 
 class TrafficReports:
-    """
-    针对单一stat_time,plat,agent_type,website
-    聚合报表
-    """
     def __init__(self, details_list):
 
         self.ck_session = ClickhouseStore().get_session()

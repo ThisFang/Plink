@@ -52,7 +52,7 @@ class RedisStore:
     @staticmethod
     def click_uv_redis_name(plat, agent_type, date, click_category, click_action):
         """点击事件uv的redis名字"""
-        redis_name = 'mplus:uv:click:{}_{}_{}_{}'.format(
+        redis_name = 'mplus:uv:click:{}_{}_{}_{}_{}'.format(
             str(date),
             str(plat),
             str(agent_type),

@@ -3,7 +3,7 @@
 from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
 import json
 from app.utils import Func
-from app.utils import logger
+from app.utils import logger, LogName
 import uuid
 from app.utils.enums import TargetEnum
 
@@ -27,23 +27,16 @@ class TargetSave(FlatMapFunction):
         target_list = json.loads(target_list)
         for target in target_list:
             try:
-                logger('target').notice('target get {}'.format(target))
+                logger(LogName.TARGET).notice('target get {}'.format(target))
                 target_obj = TargetArgs(target)
                 target_obj = target_obj.to_dict()
             except Exception as e:
-                logger().error('{}, {}, {}'.format(topic, e, target))
+                logger(LogName.TARGET).error('{}, {}, {}'.format(topic, e, target))
             else:
-                """收集供后面使用"""
                 collector.collect((topic, json.dumps(target_obj)))
 
 
 class TargetArgs:
-    """
-    将redis拿到的target格式化成对象
-    """
-    def __str__(self):
-        return self.to_json()
-
     def __init__(self, args):
         self.args = args
         # 解析参数

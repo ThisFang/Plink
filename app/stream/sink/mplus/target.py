@@ -12,11 +12,10 @@ from app.utils.enums import TargetEnum
 from app.common.request import CurlToAnalysis
 from app.stream.store.database import ck_table, ClickhouseStore
 import time
+from app.utils import LogName
 
 
 class Target:
-    """初始化构造函数"""
-
     @staticmethod
     def stream_end(data_stream):
         """
@@ -64,9 +63,6 @@ class GetDetailsTarget(FlatMapFunction):
 
 
 class ReportsTargetFlatMap(FlatMapFunction):
-    """
-    stat_target报表写入
-    """
     def flatMap(self, value, collector):
         value = json.loads(value)
         # 增加渠道价值报表推送
@@ -120,11 +116,6 @@ class ReportsTargetFlatMap(FlatMapFunction):
 
 
 class TargetReports:
-    """
-    针对单一stat_time,plat,agent_type,website
-    聚合报表
-    """
-
     def __init__(self, details, collector):
         self.details = details
         self.ck_session = ClickhouseStore().get_session()
@@ -260,7 +251,7 @@ class TargetReports:
 
         # 访问的去重数据量太大，日志无参考价值
         if exist and self.details.get('target_type') != TargetEnum.V:
-            logger('target').info('target exist !{}'.format(self.details))
+            logger(LogName.TARGET).info('target exist !{}'.format(self.details))
 
         if exist > 0:
             self.exist = True

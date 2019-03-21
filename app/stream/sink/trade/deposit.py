@@ -5,7 +5,7 @@ from org.apache.flink.streaming.api.collector.selector import OutputSelector
 import json
 from sqlalchemy import func
 from sqlalchemy import not_,or_,desc
-from app.utils import Func, logger
+from app.utils import Func, logger, LogName
 from app.utils.constants import *
 from app.utils.enums import PayStatusEnum, DepositTypeEnum, IsFirstEnum, TargetEnum
 from app.common.request import CurlToAnalysis
@@ -40,9 +40,6 @@ class Deposit:
 
 
 class ReportsChannelValueFlatMap(FlatMapFunction):
-    """
-    stat_channel_value 报表写入
-    """
     def flatMap(self, data, collector):
         try:
             data = json.loads(data)
@@ -50,9 +47,7 @@ class ReportsChannelValueFlatMap(FlatMapFunction):
                 reports_data = ChannelValueReports(data, collector).to_dict()
                 self.update_stat_channel_value(reports_data)
         except BaseException as err:
-            logger().error('{}, {}'.format(err, data))
-        else:
-            pass
+            logger(LogName.DEPOSIT).error('{}, {}'.format(err, data))
 
     @staticmethod
     def update_stat_channel_value(reports_data):
@@ -69,9 +64,6 @@ class ReportsChannelValueFlatMap(FlatMapFunction):
 
 
 class ChannelValueReports:
-    """
-    stat_channel_value 报表聚合
-    """
     def __init__(self, details, collector):
         self.details = details
         self.ck_session = ClickhouseStore().get_session()
@@ -145,7 +137,7 @@ class DetailsDepositFlatMap(FlatMapFunction):
             data = json.loads(data)
             primary_dict = PersistenceDetailsDeposit(data).to_dict()
         except BaseException as err:
-            logger().error('{}, {}'.format(err, data))
+            logger(LogName.DEPOSIT).error('{}, {}'.format(err, data))
         else:
             if primary_dict is not None:
                 collector.collect(json.dumps(primary_dict))
@@ -174,7 +166,7 @@ class PersistenceDetailsDeposit:
             self.is_insert = False
         else:
             self.is_insert = False
-            logger().info("数据库中订单状态未知，待插入源数据为：{}".format(self.details))
+            logger(LogName.DEPOSIT).info('数据库中订单状态未知，待插入源数据为：{}'.format(self.details))
 
     def delete_same_order(self):
         buss_no = self.details.get('buss_no')

@@ -18,14 +18,14 @@ class Main(SinkBase):
         stream = stream. \
             split(base.TopicSelector())
 
-        # traffic_stream = stream.select('traffic')
-        # Traffic.stream_end(traffic_stream)
+        traffic_stream = stream.select('traffic')
+        Traffic.stream_end(traffic_stream)
 
         target_stream = stream.select('target')
         Target.stream_end(target_stream)
 
-        # push_app_stream = stream.select('push_app')
-        # PushApp.stream_end(push_app_stream)
+        push_app_stream = stream.select('push_app')
+        PushApp.stream_end(push_app_stream)
 
-        # push_send_stream = stream.select('push_send')
-        # PushSend.stream_end(push_send_stream)
+        push_send_stream = stream.select('push_send')
+        PushSend.stream_end(push_send_stream)

@@ -1,9 +1,9 @@
 # -- coding: UTF-8
 
-import json
-from app.utils import Func, logger
-import time
 from org.apache.flink.api.common.functions import FlatMapFunction, ReduceFunction, FilterFunction
+import json
+from app.utils import Func, logger, LogName
+import time
 from app.utils.enums import DepositTypeEnum
 
 
@@ -21,24 +21,18 @@ class DepositSave(FlatMapFunction):
         topic, ip, data_list = stream
         data_list = json.loads(data_list)
         for item in data_list:
-            logger('deposit').info('deposit_origin:{}'.format(item))
+            logger(LogName.DEPOSIT).info('deposit_origin:{}'.format(item))
             try:
                 deposit_obj = DepositArgs(item)
                 deposit_obj = deposit_obj.to_dict()
             except Exception as e:
-                logger('deposit').error('{}, {}, {}'.format(topic, e, item))
+                logger(LogName.DEPOSIT).error('{}, {}, {}'.format(topic, e, item))
             else:
-                logger('deposit').info('deposit_obj:{}'.format(deposit_obj))
+                logger(LogName.DEPOSIT).info('deposit_obj:{}'.format(deposit_obj))
                 collector.collect((topic, json.dumps(deposit_obj)))
 
 
 class DepositArgs:
-    """
-    将redis拿到的数据格式化成对象
-    """
-    def __str__(self):
-        return self.to_json()
-
     def __init__(self, args):
         self.args = args
         # 解析参数
@@ -118,7 +112,8 @@ class DepositArgs:
                 11: 2,  # 成功
             }
         else:
-            pass
+            status_dict = {}
+
         # 不成功全部算在待支付
         status = status_dict.get(status, 1)
         self.status = status

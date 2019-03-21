@@ -73,9 +73,6 @@ class PushSendKeyBy(KeySelector):
 
 
 class ReportsPushSendFlatMap(FlatMapFunction):
-    """
-    stat_push_send报表写入
-    """
     def flatMap(self, value, collector):
         value = json.loads(value)
         try:
@@ -98,14 +95,8 @@ class ReportsPushSendFlatMap(FlatMapFunction):
 
 
 class PushSendReports:
-    """
-    针对单一stat_time,plat,agent_type,website
-    聚合报表
-    """
     def __init__(self, detail):
-
         self.ck_session = ClickhouseStore.get_session()
-
         self.detail = detail
         self._explode_exist()
         self.__data_dict()

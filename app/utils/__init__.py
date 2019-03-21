@@ -17,11 +17,13 @@
 ################################################################################
 
 from app.utils.logger import logger
+from app.utils.logger import LogName
 from app.utils.func import Func
 from app.utils.printer import Printer
 
 __all__ = [
     'logger',
+    'LogName',
     'Func',
     'Printer'
 ]

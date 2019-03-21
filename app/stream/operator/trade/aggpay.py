@@ -19,6 +19,7 @@ class AggPaySave(FlatMapFunction):
         topic, ip, data_list = stream
         data_list = json.loads(data_list)
         for item in data_list:
+            logger('deposit').info('agg_pay_origin:{}'.format(item))
             try:
                 agg_pay_obj = AggPayArgs(item)
                 agg_pay_obj = agg_pay_obj.to_dict()
@@ -30,13 +31,6 @@ class AggPaySave(FlatMapFunction):
 
 
 class AggPayArgs:
-    """
-    将redis拿到的数据格式化成对象
-    """
-
-    def __str__(self):
-        return self.to_json()
-
     def __init__(self, args):
         self.args = args
         # 解析参数

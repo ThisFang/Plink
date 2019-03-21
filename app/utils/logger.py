@@ -11,7 +11,6 @@ logger_conf = get_conf('base', 'LOGGER')
 
 
 # 日志存放路径
-# LOG_DIR = os.path.join("Log")
 LOG_DIR = logger_conf.get('path')
 
 
@@ -32,7 +31,19 @@ def log_type(record, handler):
     return log
 
 
-def logger(file_name='default'):
+class LogName:
+    DEFAULT = 'default'
+    ORIGIN = 'origin'
+    CURL = 'curl'
+    TARGET = 'target'
+    TRAFFIC = 'traffic'
+    CLICK = 'click'
+    DEPOSIT = 'deposit'
+    TEST = 'test'
+    APP = 'app'
+
+
+def logger(file_name=LogName.DEFAULT):
     # 日志打印到文件
     log_file = TimedRotatingFileHandler(
         os.path.join(LOG_DIR, '%s.log' % file_name),
@@ -48,3 +59,6 @@ def logger(file_name='default'):
     run_log.handlers = []
     run_log.handlers.append(log_file)
     return run_log
+
+
+
