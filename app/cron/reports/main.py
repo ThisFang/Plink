@@ -11,7 +11,7 @@ def get_date():
     # get date
     date = str(datetime.date.today())
     try:
-        opts, args = getopt.getopt(sys.argv[1:-1], 'd:')
+        opts, args = getopt.getopt(sys.argv[1:], 'd:')
     except Exception as e:
         print(e)
         exit()
