@@ -14,11 +14,11 @@ BOOT = [
     },
     {
         'name': 'mplus-traffic-for-app-mq',
-        'module': 'mplus.normal_main',
+        'module': 'mplus.app_main',
         'source_driver': 'cache.redis_source',
         'source_conf': 'base',
         'source_topic': 'buffer->topic{mplus/app_traffic}mq_keys',
-        'sink_driver': 'mplus.main',
+        'sink_driver': 'mplus.app_main',
         'sink_conf': 'base',
         'parallelism': 1
     },
