@@ -50,8 +50,11 @@ class NormalInitFlatMap(FlatMapFunction):
         """
         method, ip, args, gateway_uri, receive_time = value
         args = json.loads(args)
-        # logger(LogName.TEST).info(args)
-        data = args.get('data')
+        try:
+            data = args.get('data')
+        except Exception as e:
+            logger(LogName.TEST).info(args)
+            return
 
         if type(data).__name__ != 'list':
             logger(LogName.ORIGIN).warning('cannot get data {}'.format(args))
