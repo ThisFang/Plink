@@ -30,28 +30,28 @@ class Traffic:
 
         # 报表落地
         data_stream.key_by(ReportsTrafficKeyBy()). \
-            time_window(milliseconds(60)). \
+            time_window(seconds(30)). \
             apply(ReportsTrafficApply())
 
         # 详情落地
         ck_insert.set_table(table=ck_table.DetailsTraffic)
         data_stream.flat_map(GetDetailsTraffic()). \
             key_by(base.KeyBy()). \
-            time_window(milliseconds(10)). \
+            time_window(seconds(10)). \
             apply(ck_insert)
 
         # 收集visit_id
         ck_insert.set_table(table=ck_table.TrafficVisitId)
         data_stream.flat_map(GetTrafficVisitId()). \
             key_by(base.KeyBy()). \
-            time_window(milliseconds(10)). \
+            time_window(seconds(10)). \
             apply(ck_insert)
 
         # 详情落地（访问时长）
         ck_insert.set_table(table=ck_table.DetailsViewTime)
         data_stream.flat_map(GetDetailsViewTime()). \
             key_by(VTTrafficKeyBy()). \
-            time_window(milliseconds(31)). \
+            time_window(seconds(31)). \
             apply(ck_insert)
 
 
