@@ -24,8 +24,8 @@ def load_packages():
         CONF_ROOT
     ]
     require_file = open(REQUIRE_FILE_ADDRESS, 'r')
-    ignore_package_list = ['configparser', 'enum34']
-    special_package_list = ['enum']
+    ignore_package_list = ['configparser', 'enum34', 'pyOpenSSL', 'six']
+    special_package_list = ['enum', 'OpenSSL', 'six.py']
     for line in require_file.readlines():
         package, version = line.strip().split('==')
         if package in ignore_package_list:

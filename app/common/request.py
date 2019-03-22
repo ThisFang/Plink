@@ -14,17 +14,22 @@ class RequestBase(object):
 
         self._http_method = http_method
         self._url = url
+        kwargs['verify'] = False
         self._kwargs = kwargs
         self._data = kwargs.get('json', kwargs.get('data'))
 
     def get_response(self):
-        res = requests.request(
-            self._http_method,
-            self._url,
-            **self._kwargs
-        )
-        self.res = res
-        return res
+        try:
+            res = requests.request(
+                self._http_method,
+                self._url,
+                **self._kwargs
+            )
+        except Exception:
+            self.res = None
+        else:
+            self.res = res
+        return self.res
 
     def curl(self):
         """发送"""
@@ -68,10 +73,14 @@ class RequestBase(object):
 
     def get_text_res(self):
         """获取结果文本"""
+        if self.res is None:
+            return None
         return self.res.text
 
     def get_dict_res(self):
         """获取结果字典"""
+        if self.res is None:
+            return None
         return json.loads(self.res.text)
 
 
@@ -79,7 +88,7 @@ class CurlToGateway(RequestBase):
     def __init__(self, uri, **kwargs):
         self.res = None
         self.url = self.__combine_url(uri)
-        super(CurlToGateway, self).__init__('POST', self.url, **kwargs)
+        RequestBase.__init__(self, 'POST', self.url, **kwargs)
 
     @staticmethod
     def __combine_url(uri):
@@ -114,7 +123,7 @@ class CurlToAnalysis(RequestBase):
         self.res = None
         self.url = self.__combine_url(sys, uri)
         self.kwargs = kwargs
-        super(CurlToAnalysis, self).__init__(method, self.url, **kwargs)
+        RequestBase.__init__(self, method, self.url, **kwargs)
 
     @staticmethod
     def __combine_url(sys, uri):
