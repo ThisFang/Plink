@@ -123,7 +123,7 @@ class ViewTimeAnalysis:
             json.dumps(view_value)
         )
         self.view_time_ck_detail = self.__combine_view_time_ck(
-            website.decode('utf-8'),
+            website,
             sign,
             delta_time
         )
