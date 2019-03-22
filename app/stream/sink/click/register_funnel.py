@@ -24,13 +24,13 @@ class RegisterFunnel:
         ck_insert = base.ClickHouseApply()
 
         # 报表落地
-        reports = data_stream.key_by(click_base.ReportsClickWithValueKeyBy()). \
+        data_stream.key_by(click_base.ReportsClickWithValueKeyBy()). \
             time_window(milliseconds(5000)). \
             apply(ReportsRegisterFunnelApply())
 
         # 详情落地
         ck_insert.set_table(table=ck_table.DetailsClick)
-        reports.flat_map(click_base.GetDetailsClick()). \
+        data_stream.flat_map(click_base.GetDetailsClick()). \
             key_by(base.KeyBy()). \
             time_window(milliseconds(1000)). \
             apply(ck_insert)
