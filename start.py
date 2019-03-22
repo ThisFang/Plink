@@ -58,7 +58,7 @@ def stream_boot_join(main_file, packages, boot_conf):
     params = '--boot \'{}\''.format(json.dumps(boot_conf))
     cmd = '{}/bin/pyflink-stream.sh {} {} - {}'.format(FLINK_ROOT, main_file, packages, params)
     # 借助nohup后台运行
-    # cmd = 'nohup {} &'.format(cmd)
+    cmd = 'nohup {} &'.format(cmd)
     os.system(cmd)
 
 
