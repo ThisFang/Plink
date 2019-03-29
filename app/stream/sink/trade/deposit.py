@@ -60,7 +60,7 @@ class ReportsChannelValueFlatMap(FlatMapFunction):
                 dict(reports_data)
             ]
         }
-        CurlToAnalysis('flow', '/channel_value', 'PATCH', data=data).curl()
+        CurlToAnalysis('flow', '/channel_value', 'PATCH', json=data).curl()
 
 
 class ChannelValueReports:

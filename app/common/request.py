@@ -8,7 +8,7 @@ from app.utils import logger, LogName
 class RequestBase(object):
     def __init__(self, http_method, url, **kwargs):
         self.__retry_times = 1
-        self.__retry_max = 3
+        self.__retry_max = get_conf('base', 'BASE').get('curl_retry_max', 3)
         self.res = None
         self.reset_retry()
 

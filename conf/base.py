@@ -27,5 +27,6 @@ MPLUS_URL = {
 }
 
 BASE = {
-    'source_wait_second': 5  # source未读取到数据时挂起时间
+    'source_wait_second': 5,  # source未读取到数据时挂起时间
+    'curl_retry_max': 3  # curl发送失败重试次数
 }
