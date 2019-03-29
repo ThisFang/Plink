@@ -84,5 +84,5 @@ class RedisStore:
         """
         half_hour_time = Func.get_nearly_half_hour(req_time)
         time_start = time.strftime('%Y%m%d_%H_%M', time.localtime(half_hour_time))
-        redis_name = 'mplus:view_time:{}_{}_{}:{}'.format(plat, agent_type, visit_id, time_start)
+        redis_name = 'mplus:calc:view_time:{}_{}_{}:{}'.format(plat, agent_type, visit_id, time_start)
         return redis_name
