@@ -8,7 +8,7 @@ from app.stream.operator.trade.deposit import Deposit
 
 class NormalMain(OperatorBase):
     def __init__(self, boot_conf):
-        super(NormalMain, self).__init__(boot_conf)
+        OperatorBase.__init__(self, boot_conf)
 
     def get_stream(self, stream):
         stream = stream.flat_map(base.NormalInitFlatMap()). \

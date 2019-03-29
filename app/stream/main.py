@@ -31,7 +31,7 @@ from conf import get_conf
 class Generator(SourceFunction, SuperBase):
     """数据源"""
     def __init__(self, boot_conf, data_source):
-        super(Generator, self).__init__(boot_conf)
+        SuperBase.__init__(self, boot_conf)
         self._running = True
         self.__data_source = data_source
 

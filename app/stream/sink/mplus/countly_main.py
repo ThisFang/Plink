@@ -10,7 +10,7 @@ import json
 
 class CountlyMain(SinkBase):
     def __init__(self, boot_conf):
-        super(CountlyMain, self).__init__(boot_conf)
+        SinkBase.__init__(self, boot_conf)
 
     def write_by_stream(self, stream):
         stream.key_by(CountlyKeyBy()). \

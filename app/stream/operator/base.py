@@ -10,7 +10,7 @@ from app.common.request import CurlToGateway
 
 class OperatorBase(SuperBase):
     def __init__(self, boot_conf):
-        super(OperatorBase, self).__init__(boot_conf)
+        SuperBase.__init__(self, boot_conf)
 
     def get_stream(self, stream):
         """

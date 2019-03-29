@@ -4,7 +4,7 @@ from app.common import SuperBase
 
 class SourceBase(SuperBase):
     def __init__(self, boot_conf):
-        super(SourceBase, self).__init__(boot_conf)
+        SuperBase.__init__(self, boot_conf)
 
     def get_handler(self):
         """获取链接实例或处理器实例"""

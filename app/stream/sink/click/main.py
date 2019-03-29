@@ -14,10 +14,8 @@ from app.stream.sink.click.register_route import RegisterRoute
 
 
 class Main(SinkBase):
-    """初始化构造函数"""
-
     def __init__(self, boot_conf):
-        super(Main, self).__init__(boot_conf)
+        SinkBase.__init__(self, boot_conf)
 
     def write_by_stream(self, stream):
         stream = stream. \

@@ -13,7 +13,7 @@ from app.stream.operator.click.register_route import RegisterRoute
 
 class Main(OperatorBase):
     def __init__(self, boot_conf):
-        super(Main, self).__init__(boot_conf)
+        OperatorBase.__init__(self, boot_conf)
 
     def get_stream(self, stream):
         stream = stream.flat_map(base.NormalInitFlatMap()). \

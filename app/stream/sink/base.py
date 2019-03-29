@@ -12,7 +12,7 @@ from org.apache.flink.streaming.api.collector.selector import OutputSelector
 
 class SinkBase(SuperBase):
     def __init__(self, boot_conf):
-        super(SinkBase, self).__init__(boot_conf)
+        SuperBase.__init__(self, boot_conf)
 
     def write_by_stream(self, data_stream):
         """

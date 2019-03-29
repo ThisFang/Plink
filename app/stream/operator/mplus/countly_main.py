@@ -10,7 +10,7 @@ from app.stream.operator.mplus.push_send import PushSend
 
 class CountlyMain(OperatorBase):
     def __init__(self, boot_conf):
-        super(CountlyMain, self).__init__(boot_conf)
+        OperatorBase.__init__(self, boot_conf)
 
     def get_stream(self, stream):
         stream = stream.flat_map(base.CountlyInitFlatMap()). \

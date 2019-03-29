@@ -7,7 +7,7 @@ from app.stream.sink.trade.deposit import Deposit
 
 class Main(SinkBase):
     def __init__(self, boot_conf):
-        super(Main, self).__init__(boot_conf)
+        SinkBase.__init__(self, boot_conf)
 
     def write_by_stream(self, stream):
         stream = stream. \
