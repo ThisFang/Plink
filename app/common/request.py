@@ -79,9 +79,15 @@ class RequestBase(object):
 
     def get_dict_res(self):
         """获取结果字典"""
-        if self.res is None:
+        try:
+            res = json.loads(self.res.text)
+        except ValueError:
+            logger().warn(self.res.text)
             return None
-        return json.loads(self.res.text)
+        except Exception:
+            return None
+
+        return res
 
 
 class CurlToGateway(RequestBase):
