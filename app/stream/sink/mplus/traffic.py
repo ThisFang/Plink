@@ -29,7 +29,7 @@ class Traffic:
         ck_insert = base.ClickHouseApply()
 
         # 报表落地
-        data_stream.key_by(ReportsTrafficKeyBy()). \
+        report_stream = data_stream.key_by(ReportsTrafficKeyBy()). \
             time_window(seconds(30)). \
             apply(ReportsTrafficApply())
 
@@ -42,7 +42,7 @@ class Traffic:
 
         # 收集visit_id
         ck_insert.set_table(table=ck_table.TrafficVisitId)
-        data_stream.flat_map(GetTrafficVisitId()). \
+        report_stream.flat_map(GetTrafficVisitId()). \
             key_by(base.KeyBy()). \
             time_window(seconds(10)). \
             apply(ck_insert)
