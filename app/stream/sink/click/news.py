@@ -79,7 +79,7 @@ class NewsReports:
             self.agent_type,
             date,
             self.click_category,
-            self.click_action,
+            self.click_value,
             visit_id_list
         )
 

@@ -16,9 +16,9 @@ class UvCalc:
         redis_name = RedisStore.traffic_uv_redis_name(plat, agent_type, date, website)
         return self.__uv_redis_calc(redis_name, visit_id_list)
 
-    def click_uv(self, plat, agent_type, date, click_category, click_action, visit_id_list):
+    def click_uv(self, plat, agent_type, date, click_category, dime, visit_id_list):
         """点击事件uv计算"""
-        redis_name = RedisStore.click_uv_redis_name(plat, agent_type, date, click_category, click_action)
+        redis_name = RedisStore.click_uv_redis_name(plat, agent_type, date, click_category, dime)
         return self.__uv_redis_calc(redis_name, visit_id_list)
 
     def push_app_uv(self, plat, agent_type, date, detail_id, visit_id_list):

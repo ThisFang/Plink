@@ -50,14 +50,14 @@ class RedisStore:
         return redis_name
 
     @staticmethod
-    def click_uv_redis_name(plat, agent_type, date, click_category, click_action):
+    def click_uv_redis_name(plat, agent_type, date, click_category, dime):
         """点击事件uv的redis名字"""
         redis_name = 'mplus:uv:click:{}_{}_{}_{}_{}'.format(
             str(date),
             str(plat),
             str(agent_type),
             click_category.encode('utf-8'),
-            click_action.encode('utf-8')
+            dime.encode('utf-8')
         )
         return redis_name
 
