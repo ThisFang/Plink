@@ -8,6 +8,15 @@ REDIS = {
     }
 }
 
+RABBITMQ = {
+    'base': {
+        'host': '192.168.1.120',
+        'port': 5672,
+        'username': 'admin',
+        'password': '123456'
+    }
+}
+
 LOGGER = {
     'path': '/clouddisk/logs/flink',
     'level': 'INFO',
