@@ -98,7 +98,7 @@ class CurlToGateway(RequestBase):
 
     @staticmethod
     def __combine_url(uri):
-        host = get_conf('base', 'MPLUS_URL').get('gateway_domain')
+        host = get_conf('base', 'URL').get('gateway_domain')
         url = '{}{}'.format(host, uri)
         return url
 
@@ -133,7 +133,7 @@ class CurlToAnalysis(RequestBase):
 
     @staticmethod
     def __combine_url(sys, uri):
-        host = get_conf('base', 'MPLUS_URL').get(sys)
+        host = get_conf('base', 'URL').get(sys)
         url = '{}{}'.format(host, uri)
         return url
 

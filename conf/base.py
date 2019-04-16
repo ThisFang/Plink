@@ -17,6 +17,11 @@ RABBITMQ = {
     }
 }
 
+URL = {
+    'gateway_domain': 'http://192.168.1.139',
+    'test': 'http://192.168.1.142:9001'
+}
+
 LOGGER = {
     'path': '/clouddisk/logs/flink',
     'level': 'INFO',
