@@ -31,7 +31,7 @@ class PreviewStatTraffic(MysqlBase):
     __tablename__ = 'stat_traffic'
 
     id = Column(String(36), primary_key=True, default=str(uuid.uuid4()))
-    plat = Column(Integer, default=1)  # 平台 1/金业
+    plat = Column(Integer, default=1)  # 平台
     agent_type = Column(Integer)  # 设备来源： 1/PC 2/WAP 3/公众号 4/IOS 5/Andriod
     website = Column(String(100))  # 页面
     pv_count = Column(Integer, default=0)  # 访问pv统计

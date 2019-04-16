@@ -139,7 +139,7 @@ class DetailsTraffic(CkBase):
     req_time = Column(types.DateTime)  # 请求时间 10位时间戳
     req_date = Column(types.Date)  # 请求时间 Y-m-d
     req_hour = Column(types.Int)  # 请求时间 H
-    plat = Column(types.Int8)          # 平台 1/金业
+    plat = Column(types.Int8)          # 平台 
     agent_type = Column(types.Int8)    # 设备来源： 1/PC 2/WAP 3/公众号 4/IOS 5/Android
     website = Column(types.String)     # 网页标题
     url = Column(types.String)         # url
